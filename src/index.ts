@@ -7,7 +7,11 @@ const name = 'rollup-plugin-inject-process-env';
 // We prefix it with \0 so that other plugins ignore it
 const VIRTUAL_MODULE_ID = `\0${ name }`;
 
-export default function rollupPluginInjectProcessEnv(env = {}): Plugin {
+interface Options {
+    useVar?: boolean,
+}
+
+export default function rollupPluginInjectProcessEnv(env = {}, options: Options): Plugin {
     return {
         name,
         transform(code: string, id: string) {
@@ -31,9 +35,10 @@ export default function rollupPluginInjectProcessEnv(env = {}): Plugin {
         },
         load(id: string) {
             if (id === VIRTUAL_MODULE_ID) {
+                const variable = options.useVar ? 'var' : 'const'
                 // All fields of 'process' we want to mock are top level exports of the module.
                 // For now I hardcoded "NODE_ENV" but you probably want to put more logic here.
-                return `export const env = ${ JSON.stringify(env) }`;
+                return `export ${variable} env = ${ JSON.stringify(env) }`;
             }
             return null;
         },
